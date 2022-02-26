@@ -26,6 +26,14 @@
 ;; OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+.ifndef FORTHISH_INC_
+FORTHISH_INC_ = 1
+
+.macro maybe_import name
+  .ifndef FORTHISH_NO_IMPORT
+    .import name
+  .endif
+.endmacro
 
 ;; dup_
 ;;
@@ -36,50 +44,120 @@
     pha
 .endmacro
 
+;; swap_
+;;
+;; swaps the top two bytes of the stack.
+.macro swap_
+    pla
+    tay
+    pla
+    tax
+    
+    tya
+    pha
+    txa
+    pha
+.endmacro
+
 ;; swapXY_
 ;;
 ;; swaps the byte at stack position marked by register X
 ;; with the byte at stack position marked by register Y
+;;
+;; Example:
+;;  Stack: A (X:)B C (Y:)D E
+;;  swapXY_
+;;  Stack: A (X:)D C (Y:)B E
 .macro swapXY_
     lda $100,x
-    sta @write+1
+    pha
     lda $100,y
     sta $100,x
-@write:
-    lda #$00 ; overwritten above
+    pla
     sta $100,y
 .endmacro
 
-;; roll_ N M
+;; pick_ N
 ;;
-;; roll the top N bytes of the stack, so that if the stack has
-;; items numbered (going from bottom to top of stack):
-;;   ... [N+1 N] N-1 N-2 ... 0
-;; then after this operation, the items will be rearranged like:
-;;   ... [N+1 N] M-1 M-2 ... 0 N-1 N-2 ... M+1 M
-;; M is expected to be less than N, and N is expected to be
-;; at least 1 or greater.
-.macro roll_ N, M
-.scope
+;; place a copy of the N-1st byte from top-of-stack
+;; on the top of the stack.
+.macro pick_ N
     tsx
-    stx @cpx+1
-    .repeat M
+    .if N <= 5
+      .repeat N
         inx
-    .endrepeat
-    txa
-    tay
-    .repeat N-M
-        iny
-    .endrepeat
-@lp:
-    swapXY_
-    dex
-    dey
-@cpx:
-    cpx #$00 ; overwritten above
-    bne @lp
-    txs
-.endscope
+      .endrepeat
+    .else
+      txa
+      clc
+      adc #N
+      tax
+    .endif
+    lda $100,x
+    pha
+.endmacro
+
+;; rot_
+;;
+;; Rotate the top 3 items of the stack one forward.
+;; Equivalent to roll1 N, but faster.
+.macro rot_
+    tsx
+    dup_
+    lda $101,x
+    sta $100,x
+    lda $102,x
+    sta $101,x
+    pla
+    sta $102,x
+.endmacro
+
+;; rotb_
+;;
+;; Rotate the top 3 items of the stack back one.
+;; Very useful for getting at something that was
+;; pushed just prior to a JSR.
+.macro rotb_
+    tsx
+    dup_
+    lda $102,x
+    sta $100,x
+    lda $101,x
+    sta $102,x
+    pla
+    sta $101,x
+.endmacro
+
+;; roll1 N
+;;
+;; Roll the top N bytes of the stack forward by one, wrapping
+;; the topmost byte N-1 spaces back.
+;;
+;; Example:
+;;  Stack: A B C D E (top of stack)
+;;  roll_ 4
+;;  Stack: A E B C D
+maybe_import roll1
+maybe_import roll1A
+.macro roll1_ N
+    lda #N
+    jsr roll1A
+.endmacro
+
+;; rollb1 N
+;;
+;; Roll the top N bytes of the stack back by one, wrapping
+;; the backmost byte to the front
+;;
+;; Example:
+;;  Stack: A B C D E (top of stack)
+;;  roll_ 4
+;;  Stack: A C D E B
+maybe_import rollb1
+maybe_import rollb1A
+.macro rollb1_ N
+    lda #N
+    jsr rollb1A
 .endmacro
 
 .macro copy_ N
@@ -99,3 +177,4 @@
 .endscope
 .endmacro
 
+.endif ; FORTHISH_INC_
