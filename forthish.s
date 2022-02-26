@@ -63,3 +63,36 @@ rollb1A:
     jmp @cpx
 @finish:
     rts
+
+.export copy, copyA
+copy:
+    rotb_ ;get N past the return address
+    pla
+copyA:
+    sta @adc+1
+    ; move our return address out of the way
+    pla
+    sta @finish+4
+    pla
+    sta @finish+1
+    ;
+    tsx
+    stx @cpx+1
+    txa
+    clc
+@adc:
+    adc #$00 ; overwritten above
+    tax
+@lp:
+    lda $100,x
+    pha
+    dex
+@cpx:
+    cpx #$00 ; overwritten above
+    bne @lp
+@finish:
+    lda #$00 ; overwritten
+    pha
+    lda #$00 ; overwritten
+    pha
+    rts

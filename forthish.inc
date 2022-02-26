@@ -128,7 +128,7 @@ FORTHISH_INC_ = 1
     sta $101,x
 .endmacro
 
-;; roll1 N
+;; roll1_ N
 ;;
 ;; Roll the top N bytes of the stack forward by one, wrapping
 ;; the topmost byte N-1 spaces back.
@@ -144,7 +144,7 @@ maybe_import roll1A
     jsr roll1A
 .endmacro
 
-;; rollb1 N
+;; rollb1_ N
 ;;
 ;; Roll the top N bytes of the stack back by one, wrapping
 ;; the backmost byte to the front
@@ -160,21 +160,20 @@ maybe_import rollb1A
     jsr rollb1A
 .endmacro
 
+;; copy_ N
+;;
+;; Roll the top N bytes of the stack back by one, wrapping
+;; the backmost byte to the front
+;;
+;; Example:
+;;  Stack: A B C D E (top of stack)
+;;  roll_ 4
+;;  Stack: A C D E B
+maybe_import copy
+maybe_import copyA
 .macro copy_ N
-.scope
-    tsx
-    stx @cpx+1
-    .repeat N
-        inx
-    .endrepeat
-@lp:
-    lda $100,x
-    pha
-    dex
-@cpx:
-    cpx #$00 ; overwritten above
-    bne @lp
-.endscope
+    lda #N
+    jsr copyA
 .endmacro
 
 .endif ; FORTHISH_INC_
