@@ -77,6 +77,22 @@ FORTHISH_INC_ = 1
     sta $100,y
 .endmacro
 
+;; swapW_
+;;
+;; swaps the top two WORDS of the stack.
+.macro swapW_
+    tsx
+    inx
+    txa
+    tay
+    iny
+    iny
+    swapXY_
+    inx
+    iny
+    swapXY_
+.endmacro
+
 ;; pick_ N
 ;;
 ;; place a copy of the N-1st byte from top-of-stack

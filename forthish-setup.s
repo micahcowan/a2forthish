@@ -3,6 +3,15 @@
 ; v  This is the file of interest
 .include "forthish.inc"
 
+.macro Push5
+    lda #1
+    clc
+:   pha
+    adc #1
+    cmp #6
+    bne :-
+.endmacro
+
 .macro TestStart
     lda #$ff
     ldx #$00
@@ -12,13 +21,8 @@
     
     ldx #$2
     txs
-
-    lda #1
-    clc
-:   pha
-    adc #1
-    cmp #6
-    bne :-
+    
+    Push5
 .endmacro
 
 Start:
@@ -44,5 +48,12 @@ PICK10:
 	lda #$10
         pha
         pick_ 11
+        
+        Push5
+SWAPW:
+	swapW_
+        lda #$FF ; avoid confusion from temp stack usage
+        pha
+        pla
         
 Self:	jmp Self
