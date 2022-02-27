@@ -54,6 +54,12 @@ SWAPW:
 	swapW_
         lda #$FF ; avoid confusion from temp stack usage
         pha
-        pla
+ROT:
+	Push5
+        rot_
+        lda #$FF
+        pha
+        Push5
+        rotb_
         
 Self:	jmp Self
