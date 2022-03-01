@@ -97,20 +97,40 @@ FORTHISH_INC_ = 1
 ;;
 ;; place a copy of the N-1st byte from top-of-stack
 ;; on the top of the stack.
-.macro pick_ N
+;; pick_ N
+;;
+;; place a copy of the N-1st byte from top-of-stack
+;; on the top of the stack. If M is specified,
+;; copies M bytes back from that location, to the stack top.
+.macro pick_ N, M
+.scope
+    .ifnblank M
+      _M = M
+    .else
+      _M = 1
+    .endif
+    num = N+_M-1
     tsx
-    .if N <= 5
-      .repeat N
+    .if num <= 5
+      .repeat num
         inx
       .endrepeat
     .else
       txa
       clc
-      adc #N
+      adc #num
       tax
     .endif
     lda $101,x
     pha
+    .if _M > 1
+      .repeat _M-1
+        dex
+        lda $101,x
+        pha
+      .endrepeat
+    .endif
+.endscope
 .endmacro
 
 ;; rot_
